@@ -1,3 +1,4 @@
+using Renci.SshNet;
 using System.Diagnostics;
 
 namespace ssh_vps_service
@@ -5,6 +6,8 @@ namespace ssh_vps_service
     public class Worker : BackgroundService
     {
         private readonly Process process = new System.Diagnostics.Process();
+
+        //private readonly SshClient ssh = new SshClient();
 
         public Worker()
         {
