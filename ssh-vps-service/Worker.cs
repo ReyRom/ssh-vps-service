@@ -1,40 +1,44 @@
 using Renci.SshNet;
+using System;
 using System.Diagnostics;
+using System.Runtime.Intrinsics.X86;
 
 namespace ssh_vps_service
 {
     public class Worker : BackgroundService
     {
-        private readonly Process process = new System.Diagnostics.Process();
+        private readonly IConfiguration _config;
 
-        //private readonly SshClient ssh = new SshClient();
+        private readonly SshClient _ssh;
 
-        public Worker()
+        public Worker(IConfiguration config)
         {
-            process.StartInfo.UseShellExecute = false;
-            process.StartInfo.RedirectStandardOutput = true;
-            process.StartInfo.FileName = "cmd.exe";
-            process.StartInfo.Arguments = "/c ssh -NC -D 8888 vps";
-            process.StartInfo.CreateNoWindow = true;
+            this._config = config;
+            _ssh = new SshClient(_config["ConnectionData:Hostname"], _config["ConnectionData:User"], new PrivateKeyFile(_config["ConnectionData:IdentityFile"]));
+            _ssh.KeepAliveInterval = new TimeSpan(0, 0, 10);
+            
         }
 
         public override Task StartAsync(CancellationToken cancellationToken)
         {
-            process.Start();
+            _ssh.Connect();
+            _ssh.AddForwardedPort(new ForwardedPortDynamic(UInt32.Parse(_config["ConnectionData:ForwardingPort"])));
+            _ssh.ForwardedPorts.First().Start();
             return base.StartAsync(cancellationToken);
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            process.Kill();
+            _ssh.ForwardedPorts.First().Stop();
+            _ssh.Disconnect();
             return base.StopAsync(cancellationToken);
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            
             while (!stoppingToken.IsCancellationRequested)
             {
-                Console.WriteLine(await process.StandardOutput.ReadLineAsync());
                 await Task.Delay(1000, stoppingToken);
             }
         }
