@@ -16,7 +16,6 @@ namespace ssh_vps_service
             this._config = config;
             _ssh = new SshClient(_config["ConnectionData:Hostname"], _config["ConnectionData:User"], new PrivateKeyFile(_config["ConnectionData:IdentityFile"]));
             _ssh.KeepAliveInterval = new TimeSpan(0, 0, 10);
-            
         }
 
         public override Task StartAsync(CancellationToken cancellationToken)
@@ -36,11 +35,6 @@ namespace ssh_vps_service
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                await Task.Delay(1000, stoppingToken);
-            }
         }
     }
 }

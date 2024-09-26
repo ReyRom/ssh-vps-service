@@ -1,10 +1,14 @@
+using Microsoft.Extensions.Hosting.WindowsServices;
+
 using ssh_vps_service;
 
-var builder = Host.CreateApplicationBuilder(args);
+var builder = Host.CreateDefaultBuilder(args);
 
-builder.Configuration.AddJsonFile("appsettings.json");
+builder.ConfigureAppConfiguration(config => config.AddJsonFile("appsettings.json"));
 
-builder.Services.AddHostedService<Worker>();
+builder.ConfigureServices(services => services.AddHostedService<Worker>());
+
+builder.UseWindowsService();
 
 var host = builder.Build();
 host.Run();
